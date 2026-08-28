@@ -24,7 +24,8 @@ Your **personal** GitHub (`iamkingsleyf`) does not need to be connected. Use the
 1. In Dokploy → your Project → **Create Service** → **Docker Compose**
    > Choose **Docker Compose**, not "Application". Application will try Nixpacks and fail.
 2. Select the **Krafty-Sprouts-Media-LLC** GitHub account (not your personal account) and the **Happy** repository
-3. Branch: `main` · Build Path: `/` (repo root)
+3. Branch: `main` · **Compose Path:** `./docker-compose.yml`
+   > Do **not** set Compose Path to `/`. Dokploy passes that as `-f /`, which is a directory and fails with `EISDIR`.
 
 ### Option B: One-click template (no GitHub account picker)
 
@@ -41,7 +42,7 @@ If Dokploy offers a plain **Git** source (not GitHub OAuth):
 
 - Repository URL: `https://github.com/Krafty-Sprouts-Media-LLC/Happy.git`
 - Branch: `main`
-- Build Path: `/`
+- Compose Path: `./docker-compose.yml`
 
 The repo is public, so Dokploy can clone it without connecting `iamkingsleyf`.
 
