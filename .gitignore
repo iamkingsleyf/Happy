@@ -1,0 +1,24 @@
+# =============================================================================
+# .gitignore
+# Happy — Seedream 5.0 Pro playground.
+#
+# @package Happy
+# @since   1.0.0
+# =============================================================================
+
+# macOS
+.DS_Store
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+
+# Node
+node_modules/
+npm-debug.log*

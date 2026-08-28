@@ -1,0 +1,12 @@
+# =============================================================================
+# tests/compose.override.yml
+# Happy — local/CI test overrides. Publishes nginx on TEST_HTTP_PORT.
+#
+# @package Happy
+# @since   1.0.0
+# =============================================================================
+
+services:
+  nginx:
+    ports:
+      - "${TEST_HTTP_PORT:-18081}:80"

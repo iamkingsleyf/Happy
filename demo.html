@@ -1,0 +1,481 @@
+<!--
+  demo.html
+  Happy — open this file in a browser to review the proposed UI.
+  Double-click it, or drag it into Chrome / Edge.
+
+  @package Happy
+  @since   1.0.0
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0c0b0a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Happy</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ff7a59'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ink: {
+                            950: '#0c0b0a',
+                            900: '#141210',
+                            800: '#1c1916',
+                            700: '#2a2521',
+                        },
+                        peach: {
+                            300: '#ffb399',
+                            400: '#ff8f6b',
+                            500: '#ff7a59',
+                        },
+                        sand: {
+                            50: '#faf6f1',
+                            200: '#e8dfd4',
+                            400: '#b9a99a',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['Figtree', 'ui-rounded', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        sheet: '0 -12px 40px rgba(0,0,0,0.45)',
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        textarea, input, select { font-size: 16px !important; }
+        textarea { field-sizing: content; }
+        .safe-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+    </style>
+</head>
+<body class="min-h-dvh bg-[#1a1613] font-sans text-sand-50 antialiased">
+    <div class="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-ink-950 shadow-[0_0_80px_rgba(0,0,0,0.45)]">
+
+        <header class="sticky top-0 z-20 border-b border-white/5 bg-ink-950/90 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-xl">
+            <div class="mb-3 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-peach-400 to-[#ff4d6d] text-white shadow-lg shadow-peach-500/20">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-6.5-4.35-9.33-8.22C.8 10.4 1.1 6.9 3.7 5.2c2.1-1.37 4.7-.7 6.1 1.2C11.2 4.5 13.8 3.83 15.9 5.2c2.6 1.7 2.9 5.2 1.03 7.58C18.5 16.65 12 21 12 21z"/></svg>
+                    </span>
+                    <h1 class="text-lg font-extrabold tracking-tight">Happy</h1>
+                </div>
+                <span class="rounded-full bg-white/5 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-sand-400">Preview</span>
+            </div>
+
+            <div class="grid grid-cols-3 rounded-2xl bg-ink-800 p-1" role="tablist" aria-label="What do you want to do">
+                <button type="button" data-mode="generate" class="mode-btn rounded-xl px-2 py-2.5 text-sm font-semibold text-ink-950 bg-sand-50">Create</button>
+                <button type="button" data-mode="edit" class="mode-btn rounded-xl px-2 py-2.5 text-sm font-semibold text-sand-400">Edit</button>
+                <button type="button" data-mode="layerize" class="mode-btn rounded-xl px-2 py-2.5 text-sm font-semibold text-sand-400">Split</button>
+            </div>
+        </header>
+
+        <main id="stage" class="flex flex-1 flex-col px-4 pb-4 pt-5">
+            <section id="empty-state" class="flex flex-1 flex-col items-center justify-center px-6 text-center">
+                <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-ink-800 text-peach-400">
+                    <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                </div>
+                <h2 id="empty-title" class="text-xl font-bold tracking-tight">Make a new picture</h2>
+                <p id="empty-copy" class="mt-2 max-w-[18rem] text-[15px] leading-relaxed text-sand-400">Type what you want in the box below. Then tap Make and wait about a minute.</p>
+            </section>
+
+            <section id="result-state" class="hidden flex-1">
+                <article class="overflow-hidden rounded-3xl bg-ink-800">
+                    <img id="result-image" alt="Finished picture" class="w-full object-cover">
+                    <p class="px-4 pt-3 text-[13px] leading-snug text-sand-400">Tap <strong class="font-semibold text-sand-50">Save pic</strong>. On iPhone choose Save Image. You can also press and hold the picture.</p>
+                    <div class="grid grid-cols-1 gap-2 p-3">
+                        <button type="button" id="btn-save" class="h-12 rounded-2xl bg-peach-500 text-base font-bold text-ink-950">Save pic</button>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" id="btn-use-edit" class="rounded-2xl bg-white/5 py-3 text-sm font-semibold">Change this</button>
+                            <button type="button" id="btn-use-layers" class="rounded-2xl bg-white/5 py-3 text-sm font-semibold">Split this</button>
+                        </div>
+                    </div>
+                </article>
+            </section>
+
+            <section id="busy-state" class="hidden flex-1 flex-col items-center justify-center px-6 text-center">
+                <div class="mb-4 h-12 w-12 animate-spin rounded-full border-[3px] border-white/10 border-t-peach-400" aria-hidden="true"></div>
+                <p class="text-lg font-bold">Working on it…</p>
+                <p id="busy-elapsed" class="mt-2 text-[15px] leading-relaxed text-sand-400">Keep this page open. Usually about a minute.</p>
+            </section>
+        </main>
+
+        <footer id="composer" class="sticky bottom-0 z-20 border-t border-white/5 bg-ink-900/95 px-3 pt-3 backdrop-blur-xl safe-bottom">
+            <div id="error" class="mb-3 hidden rounded-2xl bg-rose-500 px-4 py-3 text-[15px] font-semibold leading-snug text-white" role="alert"></div>
+
+            <div id="refs" class="mb-2 hidden gap-2 overflow-x-auto"></div>
+            <p id="photo-guide" class="mb-3 hidden px-0.5 text-[13px] leading-snug text-sand-400"></p>
+
+            <label class="sr-only" for="prompt">What you want</label>
+            <textarea
+                id="prompt"
+                rows="2"
+                placeholder="Example: a birthday cake with pink flowers"
+                class="w-full resize-none rounded-2xl border border-white/10 bg-ink-800 px-4 py-3 text-[16px] leading-relaxed text-sand-50 placeholder:text-sand-400/70 focus:border-peach-400 focus:outline-none"
+            ></textarea>
+
+            <div class="mt-3 flex items-center gap-2">
+                <button type="button" id="btn-add-photo" class="hidden h-12 shrink-0 items-center justify-center rounded-2xl bg-ink-800 px-3 text-base font-semibold text-sand-50" aria-label="Add a pic from your phone">
+                    Pic
+                </button>
+                <button type="button" id="btn-options" class="h-12 shrink-0 rounded-2xl bg-ink-800 px-3 text-base font-semibold text-sand-50">Size</button>
+                <button type="button" id="btn-run" class="h-12 min-w-0 flex-1 rounded-2xl bg-peach-500 text-base font-bold text-ink-950 shadow-lg shadow-peach-500/20">Make</button>
+            </div>
+            <input id="file-input" type="file" accept="image/*" class="hidden" multiple>
+        </footer>
+    </div>
+
+    <dialog id="options" class="w-full max-w-[430px] rounded-t-3xl border-0 bg-ink-800 p-0 text-sand-50 shadow-sheet backdrop:bg-black/60">
+        <form method="dialog" class="px-5 pb-6 pt-4 safe-bottom">
+            <div class="mx-auto mb-4 h-1 w-10 rounded-full bg-white/20"></div>
+            <h3 class="mb-4 text-lg font-bold">Picture size</h3>
+
+            <p class="mb-2 text-sm text-sand-400">Pick how the picture should look.</p>
+            <div id="size-pills" class="mb-5 flex flex-wrap gap-2">
+                <button type="button" data-size="auto_2K" class="size-pill rounded-full bg-sand-50 px-3 py-2 text-sm font-semibold text-ink-950">Best</button>
+                <button type="button" data-size="square_hd" class="size-pill rounded-full bg-white/5 px-3 py-2 text-sm font-semibold">Square</button>
+                <button type="button" data-size="portrait_16_9" class="size-pill rounded-full bg-white/5 px-3 py-2 text-sm font-semibold">Tall</button>
+                <button type="button" data-size="landscape_16_9" class="size-pill rounded-full bg-white/5 px-3 py-2 text-sm font-semibold">Wide</button>
+            </div>
+
+            <div id="count-block">
+                <p class="mb-2 text-sm font-semibold text-sand-400">How many pictures?</p>
+                <div class="mb-5 flex gap-2">
+                    <button type="button" data-count="1" class="count-pill flex-1 rounded-2xl bg-sand-50 py-3 text-sm font-semibold text-ink-950">1</button>
+                    <button type="button" data-count="2" class="count-pill flex-1 rounded-2xl bg-white/5 py-3 text-sm font-semibold">2</button>
+                    <button type="button" data-count="4" class="count-pill flex-1 rounded-2xl bg-white/5 py-3 text-sm font-semibold">4</button>
+                </div>
+            </div>
+
+            <button type="submit" class="h-12 w-full rounded-2xl bg-peach-500 font-bold text-ink-950">Done</button>
+        </form>
+    </dialog>
+
+    <script>
+        const DEMO_IMAGE = 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80';
+        const state = {
+            mode: 'generate',
+            photos: [],
+            size: 'auto_2K',
+            count: 1,
+            running: false,
+        };
+
+        const els = {
+            prompt: document.getElementById('prompt'),
+            error: document.getElementById('error'),
+            empty: document.getElementById('empty-state'),
+            result: document.getElementById('result-state'),
+            busy: document.getElementById('busy-state'),
+            resultImage: document.getElementById('result-image'),
+            addPhoto: document.getElementById('btn-add-photo'),
+            fileInput: document.getElementById('file-input'),
+            refs: document.getElementById('refs'),
+            photoGuide: document.getElementById('photo-guide'),
+            emptyTitle: document.getElementById('empty-title'),
+            emptyCopy: document.getElementById('empty-copy'),
+            options: document.getElementById('options'),
+            elapsed: document.getElementById('busy-elapsed'),
+            countBlock: document.getElementById('count-block'),
+            btnRun: document.getElementById('btn-run'),
+            btnSave: document.getElementById('btn-save'),
+            btnPhoto: document.getElementById('btn-add-photo'),
+            btnOptions: document.getElementById('btn-options'),
+        };
+
+        const copy = {
+            generate: {
+                title: 'Make a new picture',
+                hint: 'Type what you want in the box below. Then tap Make and wait about a minute.',
+                placeholder: 'Example: a birthday cake with pink flowers',
+                run: 'Make',
+            },
+            edit: {
+                title: 'Change a pic',
+                hint: 'Tap Pic and pick one or more pictures (up to 10). Each one gets a number. Then say what to swap, like: put the jacket from Pic 2 on the person in Pic 1. Then tap Change.',
+                placeholder: 'Example: make the sky more blue',
+                run: 'Change',
+            },
+            layerize: {
+                title: 'Cut a pic into pieces',
+                hint: 'Tap Pic, pick a picture, then tap Split. Happy will separate the pieces for you.',
+                placeholder: 'Optional: keep the person and the background apart',
+                run: 'Split',
+            },
+        };
+
+        function showError(message) {
+            els.error.textContent = message;
+            els.error.classList.remove('hidden');
+        }
+
+        function clearError() {
+            els.error.classList.add('hidden');
+            els.error.textContent = '';
+        }
+
+        function setMode(mode) {
+            state.mode = mode;
+            document.querySelectorAll('.mode-btn').forEach((btn) => {
+                const active = btn.dataset.mode === mode;
+                btn.className = active
+                    ? 'mode-btn rounded-xl px-2 py-2.5 text-sm font-semibold text-ink-950 bg-sand-50'
+                    : 'mode-btn rounded-xl px-2 py-2.5 text-sm font-semibold text-sand-400';
+            });
+            els.addPhoto.classList.toggle('hidden', mode === 'generate');
+            els.addPhoto.classList.toggle('flex', mode !== 'generate');
+            els.fileInput.multiple = mode === 'edit';
+            els.countBlock.classList.toggle('hidden', mode === 'layerize');
+            els.emptyTitle.textContent = copy[mode].title;
+            els.emptyCopy.textContent = copy[mode].hint;
+            els.prompt.placeholder = copy[mode].placeholder;
+            document.getElementById('btn-run').textContent = copy[mode].run;
+            renderRefs();
+            clearError();
+        }
+
+        function photoSrc(photo) {
+            return typeof photo === 'string' ? photo : (photo.preview || photo.url || '');
+        }
+
+        function updateEditPlaceholder() {
+            if (state.mode !== 'edit') {
+                return;
+            }
+            els.prompt.placeholder = state.photos.length >= 2
+                ? 'Example: put the jacket from Pic 2 on the person in Pic 1'
+                : copy.edit.placeholder;
+        }
+
+        function renderRefs() {
+            if (state.mode === 'generate' || state.photos.length === 0) {
+                els.refs.className = 'mb-2 hidden';
+                els.refs.innerHTML = '';
+                els.photoGuide.className = 'mb-3 hidden';
+                els.photoGuide.textContent = '';
+                updateEditPlaceholder();
+                return;
+            }
+
+            els.refs.className = 'mb-2 flex gap-2 overflow-x-auto pb-1';
+            els.refs.innerHTML = state.photos.map((photo, i) => (
+                '<div class="relative h-[4.5rem] w-[4.5rem] shrink-0 overflow-hidden rounded-2xl bg-ink-800">' +
+                    '<img src="' + photoSrc(photo) + '" alt="Pic ' + (i + 1) + '" class="h-full w-full object-cover">' +
+                    '<span class="absolute bottom-1 left-1 rounded-md bg-black/80 px-1.5 py-0.5 text-[11px] font-bold leading-none">Pic ' + (i + 1) + '</span>' +
+                    '<button type="button" data-remove="' + i + '" class="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-xs" aria-label="Remove Pic ' + (i + 1) + '">×</button>' +
+                '</div>'
+            )).join('');
+
+            if (state.mode === 'edit' && state.photos.length >= 2) {
+                els.photoGuide.className = 'mb-3 px-0.5 text-[13px] leading-snug text-sand-400';
+                els.photoGuide.textContent = 'Call them Pic 1, Pic 2, and so on. Example: put Pic 2 onto Pic 1.';
+            } else if (state.mode === 'edit') {
+                els.photoGuide.className = 'mb-3 px-0.5 text-[13px] leading-snug text-sand-400';
+                els.photoGuide.textContent = 'This is Pic 1. Add another pic if you want to swap something in.';
+            } else {
+                els.photoGuide.className = 'mb-3 hidden';
+                els.photoGuide.textContent = '';
+            }
+            updateEditPlaceholder();
+        }
+
+        function showStage(name) {
+            els.empty.classList.toggle('hidden', name !== 'empty');
+            els.empty.classList.toggle('flex', name === 'empty');
+            els.result.classList.toggle('hidden', name !== 'result');
+            els.busy.classList.toggle('hidden', name !== 'busy');
+            els.busy.classList.toggle('flex', name === 'busy');
+        }
+
+        function setRunning(running) {
+            state.running = running;
+            els.prompt.disabled = running;
+            els.btnRun.disabled = running;
+            els.btnPhoto.disabled = running;
+            els.btnOptions.disabled = running;
+            els.btnRun.classList.toggle('opacity-60', running);
+            els.btnRun.textContent = running ? 'Working…' : copy[state.mode].run;
+            document.querySelectorAll('.mode-btn').forEach((btn) => {
+                btn.disabled = running;
+                btn.classList.toggle('opacity-50', running);
+            });
+        }
+
+        async function saveCurrentPicture() {
+            const url = els.resultImage.currentSrc || els.resultImage.src;
+            if (!url) {
+                showError('There is no picture to save yet.');
+                return;
+            }
+
+            els.btnSave.disabled = true;
+            els.btnSave.textContent = 'Preparing…';
+            try {
+                let fetchUrl = url;
+                if (url.startsWith('http') && window.location.protocol !== 'file:') {
+                    fetchUrl = '/download?url=' + encodeURIComponent(url) + '&name=happy.jpg';
+                }
+                const res = await fetch(fetchUrl);
+                if (!res.ok) {
+                    throw new Error('download failed');
+                }
+                const blob = await res.blob();
+                const ext = (blob.type || '').includes('png') ? 'png' : 'jpg';
+                const file = new File([blob], 'happy.' + ext, { type: blob.type || 'image/jpeg' });
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({ files: [file], title: 'Happy' });
+                    return;
+                }
+
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'happy.' + ext;
+                link.click();
+                URL.revokeObjectURL(link.href);
+            } catch (err) {
+                window.open(url, '_blank', 'noopener');
+                showError('Press and hold the picture, then tap Add to Photos.');
+            } finally {
+                els.btnSave.disabled = false;
+                els.btnSave.textContent = 'Save pic';
+            }
+        }
+
+        document.querySelectorAll('.mode-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                if (state.running) {
+                    return;
+                }
+                setMode(btn.dataset.mode);
+            });
+        });
+
+        document.getElementById('btn-options').addEventListener('click', () => els.options.showModal());
+        document.getElementById('btn-add-photo').addEventListener('click', () => els.fileInput.click());
+
+        els.fileInput.addEventListener('change', () => {
+            const files = Array.from(els.fileInput.files || []);
+            files.forEach((file) => state.photos.push(URL.createObjectURL(file)));
+            if (state.mode === 'layerize') {
+                state.photos = state.photos.slice(-1);
+            }
+            if (state.mode === 'edit') {
+                if (state.photos.length > 10) {
+                    state.photos = state.photos.slice(0, 10);
+                    showError('You can add up to 10 pics.');
+                }
+            }
+            renderRefs();
+            if (state.photos.length <= 10) {
+                clearError();
+            }
+            els.fileInput.value = '';
+        });
+
+        els.refs.addEventListener('click', (event) => {
+            const btn = event.target.closest('[data-remove]');
+            if (!btn) return;
+            state.photos.splice(Number(btn.dataset.remove), 1);
+            renderRefs();
+        });
+
+        document.querySelectorAll('.size-pill').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                state.size = btn.dataset.size;
+                document.querySelectorAll('.size-pill').forEach((pill) => {
+                    const on = pill === btn;
+                    pill.className = on
+                        ? 'size-pill rounded-full bg-sand-50 px-3 py-2 text-sm font-semibold text-ink-950'
+                        : 'size-pill rounded-full bg-white/5 px-3 py-2 text-sm font-semibold';
+                });
+            });
+        });
+
+        document.querySelectorAll('.count-pill').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                state.count = Number(btn.dataset.count);
+                document.querySelectorAll('.count-pill').forEach((pill) => {
+                    const on = pill === btn;
+                    pill.className = on
+                        ? 'count-pill flex-1 rounded-2xl bg-sand-50 py-3 text-sm font-semibold text-ink-950'
+                        : 'count-pill flex-1 rounded-2xl bg-white/5 py-3 text-sm font-semibold';
+                });
+            });
+        });
+
+        document.getElementById('btn-use-edit').addEventListener('click', () => {
+            state.photos = [DEMO_IMAGE];
+            setMode('edit');
+            showStage('empty');
+        });
+
+        document.getElementById('btn-use-layers').addEventListener('click', () => {
+            state.photos = [DEMO_IMAGE];
+            setMode('layerize');
+            showStage('empty');
+        });
+
+        document.getElementById('btn-save').addEventListener('click', () => {
+            saveCurrentPicture();
+        });
+
+        document.getElementById('btn-run').addEventListener('click', async () => {
+            if (state.running) {
+                return;
+            }
+
+            const prompt = els.prompt.value.trim();
+            clearError();
+
+            if (state.mode === 'generate' && !prompt) {
+                showError('Tell me what picture you want.');
+                els.prompt.focus();
+                return;
+            }
+            if (state.mode === 'edit' && state.photos.length === 0) {
+                showError('Add a pic first.');
+                return;
+            }
+            if (state.mode === 'edit' && !prompt) {
+                showError('Tell me what to change in the pic.');
+                els.prompt.focus();
+                return;
+            }
+            if (state.mode === 'layerize' && state.photos.length === 0) {
+                showError('Add a pic first.');
+                return;
+            }
+
+            setRunning(true);
+            showStage('busy');
+            const started = Date.now();
+            const tick = setInterval(() => {
+                const sec = Math.round((Date.now() - started) / 1000);
+                els.elapsed.textContent = 'Keep this page open. ' + sec + 's so far · usually about a minute.';
+            }, 250);
+
+            try {
+                await new Promise((resolve) => setTimeout(resolve, 1400));
+                els.resultImage.src = DEMO_IMAGE;
+                showStage('result');
+            } finally {
+                clearInterval(tick);
+                setRunning(false);
+            }
+        });
+
+        els.prompt.addEventListener('input', clearError);
+        setMode('generate');
+    </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+[
+  {
+    "id": "happy",
+    "name": "Happy",
+    "version": "1.0.0",
+    "description": "Self-hosted mobile-first Seedream 5.0 Pro playground. Generate, edit, and split images into layers via Fal.ai.",
+    "links": {
+      "github": "https://github.com/iamkingsleyf/Happy",
+      "docs": "https://github.com/iamkingsleyf/Happy#readme"
+    },
+    "tags": ["images", "seedream", "fal", "playground", "node", "nginx", "self-hosted"]
+  }
+]

@@ -1,0 +1,11 @@
+<!--
+  favicon.svg
+  Happy  app icon.
+
+  @package Happy
+  @since   1.0.0
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="8" fill="#ff7a59"/>
+  <path d="M16 25s-7.2-4.8-10.3-9.1C3.3 13.1 3.6 9.2 6.5 7.3c2.3-1.5 5.2-.8 6.7 1.3 1.5-2.1 4.4-2.8 6.7-1.3 2.9 1.9 3.2 5.8 1.1 8.6C23.2 20.2 16 25 16 25z" fill="#fff"/>
+</svg>
