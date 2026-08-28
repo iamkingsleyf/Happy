@@ -17,16 +17,37 @@ There is no Redis. The Fal.ai key never goes to the browser.
 
 ## Deploy on Dokploy
 
-### 1. Create a Docker Compose service
+Your **personal** GitHub (`iamkingsleyf`) does not need to be connected. Use the Krafty org GitHub (same account as IMGverse Search) or the public Git URL / template below.
+
+### Option A: Compose from Krafty GitHub (same as IMGverse)
 
 1. In Dokploy → your Project → **Create Service** → **Docker Compose**
    > Choose **Docker Compose**, not "Application". Application will try Nixpacks and fail.
-2. Select the GitHub account and the **Happy** repository (`iamkingsleyf/Happy`)
+2. Select the **Krafty-Sprouts-Media-LLC** GitHub account (not your personal account) and the **Happy** repository
 3. Branch: `main` · Build Path: `/` (repo root)
 
-### 2. Add environment variables
+### Option B: One-click template (no GitHub account picker)
 
-Go to the **Environment** tab and paste:
+1. In Dokploy → **Projects** → **Create Service** → **Template**
+2. Set the **Base URL** to:
+   ```
+   https://raw.githubusercontent.com/Krafty-Sprouts-Media-LLC/Happy/main
+   ```
+3. Find **Happy** and click **Create**
+
+### Option C: Public Git URL (no GitHub login at all)
+
+If Dokploy offers a plain **Git** source (not GitHub OAuth):
+
+- Repository URL: `https://github.com/Krafty-Sprouts-Media-LLC/Happy.git`
+- Branch: `main`
+- Build Path: `/`
+
+The repo is public, so Dokploy can clone it without connecting `iamkingsleyf`.
+
+### Environment variables
+
+After the service exists, go to the **Environment** tab and paste:
 
 ```env
 STACK_SLUG=happy
@@ -37,11 +58,11 @@ Get a key at [fal.ai/dashboard/keys](https://fal.ai/dashboard/keys).
 
 > Set `STACK_SLUG=happy` **before the first deploy**.
 
-### 3. Deploy
+### Deploy
 
 Click **Deploy**. Wait until both `nginx` and `app` are healthy.
 
-### 4. Attach the domain
+### Attach the domain
 
 Go to **Domains** → **Add Domain**:
 

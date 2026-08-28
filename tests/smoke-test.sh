@@ -23,6 +23,8 @@ pass() { echo "[PASS] $*"; }
 fail() { echo "[FAIL] $*"; exit 1; }
 info() { echo "[INFO] $*"; }
 
+CREATED_ENV=false
+
 cleanup() {
     if [ "${KEEP_STACK}" = true ]; then
         info "Keeping stack running (--keep). Base URL: ${BASE_URL}"
@@ -30,12 +32,21 @@ cleanup() {
     fi
     info "Tearing down test stack..."
     ${COMPOSE} down -v --remove-orphans 2>/dev/null || true
+    if [ "${CREATED_ENV}" = true ] && [ -f "${ROOT_DIR}/.env" ]; then
+        rm -f "${ROOT_DIR}/.env"
+    fi
 }
 
 trap cleanup EXIT
 
 info "Creating dokploy-network if missing..."
 docker network inspect dokploy-network >/dev/null 2>&1 || docker network create dokploy-network
+
+if [ ! -f "${ROOT_DIR}/.env" ]; then
+    info "No .env file; copying tests/smoke-test.env for Compose"
+    cp "${ROOT_DIR}/tests/smoke-test.env" "${ROOT_DIR}/.env"
+    CREATED_ENV=true
+fi
 
 info "Building and starting stack..."
 export TEST_HTTP_PORT

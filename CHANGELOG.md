@@ -5,6 +5,14 @@ All notable changes to Happy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 28/08/2026
+
+### Added
+- Dokploy `template.toml` so Happy can be deployed like IMGverse Search (Krafty org GitHub or Template Base URL — personal GitHub is not required)
+
+### Fixed
+- Smoke test copies `tests/smoke-test.env` to `.env` when missing, so GitHub Actions Compose no longer fails looking for `.env`
+
 ## [1.0.0] - 28/08/2026
 
 ### Added
