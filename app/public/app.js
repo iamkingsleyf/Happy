@@ -29,6 +29,7 @@ const els = {
     photoGuide: document.getElementById('photo-guide'),
     emptyTitle: document.getElementById('empty-title'),
     emptyCopy: document.getElementById('empty-copy'),
+    emptyAdd: document.getElementById('btn-empty-add'),
     options: document.getElementById('options'),
     elapsed: document.getElementById('busy-elapsed'),
     countBlock: document.getElementById('count-block'),
@@ -46,13 +47,13 @@ const copy = {
     },
     edit: {
         title: 'Change a pic',
-        hint: 'Tap Pic and pick one or more pictures (up to 10). Each one gets a number. Then say what to swap, like: put the jacket from Pic 2 on the person in Pic 1. Then tap Change.',
+        hint: 'Tap the plus or Pic and pick one or more pictures (up to 10). Each one gets a number. Then say what to swap, like: put the jacket from Pic 2 on the person in Pic 1. Then tap Change.',
         placeholder: 'Example: make the sky more blue',
         run: 'Change',
     },
     layerize: {
         title: 'Cut a pic into pieces',
-        hint: 'Tap Pic, pick a picture, then tap Split. Happy will separate the pieces for you.',
+        hint: 'Tap the plus or Pic, pick a picture, then tap Split. Happy will separate the pieces for you.',
         placeholder: 'Optional: keep the person and the background apart',
         run: 'Split',
     },
@@ -79,6 +80,39 @@ function toPhoto(value) {
     return value;
 }
 
+function canAddPhotos() {
+    if (state.mode === 'edit') {
+        return state.photos.length < 10;
+    }
+    if (state.mode === 'layerize') {
+        return state.photos.length < 1;
+    }
+    return false;
+}
+
+function openPhotoPicker() {
+    if (state.running || state.mode === 'generate') {
+        return;
+    }
+    if (state.mode === 'edit' && state.photos.length >= 10) {
+        showError('You can add up to 10 pics.');
+        return;
+    }
+    els.fileInput.click();
+}
+
+function syncEmptyAdd() {
+    const canAdd = state.mode !== 'generate';
+    els.emptyAdd.classList.toggle('pointer-events-none', !canAdd);
+    els.emptyAdd.tabIndex = canAdd ? 0 : -1;
+    els.emptyAdd.setAttribute('aria-hidden', canAdd ? 'false' : 'true');
+    if (canAdd) {
+        els.emptyAdd.setAttribute('aria-label', 'Add a pic from your phone');
+    } else {
+        els.emptyAdd.removeAttribute('aria-label');
+    }
+}
+
 function setMode(mode) {
     state.mode = mode;
     document.querySelectorAll('.mode-btn').forEach((btn) => {
@@ -95,6 +129,7 @@ function setMode(mode) {
     els.emptyCopy.textContent = copy[mode].hint;
     els.prompt.placeholder = copy[mode].placeholder;
     els.btnRun.textContent = copy[mode].run;
+    syncEmptyAdd();
     renderRefs();
     clearError();
 }
@@ -125,7 +160,11 @@ function renderRefs() {
             '<span class="absolute bottom-1 left-1 rounded-md bg-black/80 px-1.5 py-0.5 text-[11px] font-bold leading-none">Pic ' + (i + 1) + '</span>' +
             '<button type="button" data-remove="' + i + '" class="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-xs" aria-label="Remove Pic ' + (i + 1) + '">×</button>' +
         '</div>'
-    )).join('');
+    )).join('') + (canAddPhotos()
+        ? '<button type="button" data-add-photo class="flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center rounded-2xl border border-dashed border-white/15 bg-ink-800 text-peach-400" aria-label="Add another pic">' +
+            '<svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>' +
+          '</button>'
+        : '');
 
     if (state.mode === 'edit' && state.photos.length >= 2) {
         els.photoGuide.className = 'mb-3 px-0.5 text-[13px] leading-snug text-sand-400';
@@ -153,6 +192,7 @@ function setRunning(running) {
     els.prompt.disabled = running;
     els.btnRun.disabled = running;
     els.btnPhoto.disabled = running;
+    els.emptyAdd.disabled = running;
     els.btnOptions.disabled = running;
     els.btnRun.classList.toggle('opacity-60', running);
     els.btnRun.textContent = running ? 'Working…' : copy[state.mode].run;
@@ -337,7 +377,8 @@ document.querySelectorAll('.mode-btn').forEach((btn) => {
 });
 
 els.btnOptions.addEventListener('click', () => els.options.showModal());
-els.btnPhoto.addEventListener('click', () => els.fileInput.click());
+els.btnPhoto.addEventListener('click', openPhotoPicker);
+els.emptyAdd.addEventListener('click', openPhotoPicker);
 
 els.fileInput.addEventListener('change', () => {
     const files = Array.from(els.fileInput.files || []);
@@ -362,6 +403,10 @@ els.fileInput.addEventListener('change', () => {
 });
 
 els.refs.addEventListener('click', (event) => {
+    if (event.target.closest('[data-add-photo]')) {
+        openPhotoPicker();
+        return;
+    }
     const btn = event.target.closest('[data-remove]');
     if (!btn) {
         return;

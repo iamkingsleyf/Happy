@@ -86,8 +86,8 @@ Traefik will issue SSL. No SSH required.
 On her iPhone:
 
 - **Create** — type what she wants, tap **Make**
-- **Edit** — tap **Pic**, pick a picture, type what to change, tap **Change**
-- **Split** — add a pic, tap **Split** to cut it into pieces
+- **Edit** — tap the plus or **Pic**, pick a picture, type what to change, tap **Change**
+- **Split** — tap the plus, add a pic, tap **Split** to cut it into pieces
 - **Size** — Best, Square, Tall, or Wide, and how many pictures
 
 Errors are plain English, for example: “Tell me what picture you want.”
