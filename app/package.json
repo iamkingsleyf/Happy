@@ -1,13 +1,13 @@
 {
   "name": "happy",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "type": "module",
   "description": "Self-hosted Seedream 5.0 Pro playground via Fal.ai",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node --test src/lib/payloads.test.js src/lib/errors.test.js src/lib/download.test.js"
+    "test": "node --test src/lib/payloads.test.js src/lib/errors.test.js src/lib/download.test.js src/lib/jobs.test.js"
   },
   "dependencies": {
     "@fal-ai/client": "^1.6.2",

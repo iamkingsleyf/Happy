@@ -200,6 +200,12 @@ function setRunning(running) {
         btn.disabled = running;
         btn.classList.toggle('opacity-50', running);
     });
+    if (running) {
+        requestWakeLock();
+    } else {
+        stopElapsed();
+        releaseWakeLock();
+    }
 }
 
 function escapeAttr(value) {
@@ -239,6 +245,146 @@ async function readJson(res) {
     }
     if (!res.ok) {
         throw new Error(data.error || "Couldn't make that picture. Try again.");
+    }
+    return data;
+}
+
+const JOB_STORE_KEY = 'happy.job';
+let elapsedTimer = null;
+let wakeLock = null;
+
+function elapsedCopy(startedAt) {
+    const sec = Math.max(0, Math.round((Date.now() - startedAt) / 1000));
+    return 'You can lock the phone or take a call. Come back here. ' + sec + 's so far · usually about a minute.';
+}
+
+function startElapsed(startedAt) {
+    stopElapsed();
+    const tick = () => {
+        els.elapsed.textContent = elapsedCopy(startedAt);
+    };
+    tick();
+    elapsedTimer = setInterval(tick, 1000);
+}
+
+function stopElapsed() {
+    if (elapsedTimer) {
+        clearInterval(elapsedTimer);
+        elapsedTimer = null;
+    }
+}
+
+async function requestWakeLock() {
+    if (!state.running || !navigator.wakeLock || document.visibilityState !== 'visible') {
+        return;
+    }
+    try {
+        wakeLock = await navigator.wakeLock.request('screen');
+    } catch {
+        wakeLock = null;
+    }
+}
+
+async function releaseWakeLock() {
+    try {
+        if (wakeLock) {
+            await wakeLock.release();
+        }
+    } catch {
+        // iPhone may already have dropped the lock
+    }
+    wakeLock = null;
+}
+
+function saveJob(jobId, startedAt, mode) {
+    try {
+        sessionStorage.setItem(JOB_STORE_KEY, JSON.stringify({ id: jobId, startedAt, mode }));
+    } catch {
+        // Private mode may block storage
+    }
+}
+
+function readSavedJob() {
+    try {
+        const raw = sessionStorage.getItem(JOB_STORE_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch {
+        return null;
+    }
+}
+
+function clearSavedJob() {
+    try {
+        sessionStorage.removeItem(JOB_STORE_KEY);
+    } catch {
+        // ignore
+    }
+}
+
+function waitForResume(ms) {
+    return new Promise((resolve) => {
+        let done = false;
+        const finish = () => {
+            if (done) {
+                return;
+            }
+            done = true;
+            clearTimeout(timer);
+            document.removeEventListener('visibilitychange', onVis);
+            window.removeEventListener('pageshow', onVis);
+            resolve();
+        };
+        const onVis = () => {
+            if (document.visibilityState === 'visible') {
+                finish();
+            }
+        };
+        const timer = setTimeout(finish, ms);
+        document.addEventListener('visibilitychange', onVis);
+        window.addEventListener('pageshow', onVis);
+    });
+}
+
+async function followJob(jobId, startedAt) {
+    saveJob(jobId, startedAt, state.mode);
+    startElapsed(startedAt);
+    for (;;) {
+        try {
+            const res = await fetch('/api/jobs/' + encodeURIComponent(jobId), { cache: 'no-store' });
+            let data = {};
+            try {
+                data = await res.json();
+            } catch {
+                data = {};
+            }
+            if (res.status === 404) {
+                clearSavedJob();
+                throw new Error(data.error || "That picture isn't here anymore. Try again.");
+            }
+            if (!res.ok) {
+                await waitForResume(2000);
+                continue;
+            }
+            if (data.status === 'done') {
+                clearSavedJob();
+                return data;
+            }
+            if (data.status === 'error') {
+                clearSavedJob();
+                throw new Error(data.error || "Couldn't make that picture. Try again.");
+            }
+        } catch (err) {
+            if (err && err.name !== 'TypeError') {
+                throw err;
+            }
+        }
+        await waitForResume(2000);
+    }
+}
+
+async function finishStudio(data, startedAt) {
+    if (data && data.jobId && data.status !== 'done' && !urlsFromResponse(data).length) {
+        return followJob(data.jobId, startedAt);
     }
     return data;
 }
@@ -469,13 +615,14 @@ els.btnRun.addEventListener('click', async () => {
     setRunning(true);
     showStage('busy');
     const started = Date.now();
-    const tick = setInterval(() => {
-        const sec = Math.round((Date.now() - started) / 1000);
-        els.elapsed.textContent = 'Keep this page open. ' + sec + 's so far · usually about a minute.';
-    }, 250);
+    startElapsed(started);
 
     try {
-        const data = await runStudio();
+        const submitted = await runStudio();
+        if (submitted && submitted.jobId) {
+            saveJob(submitted.jobId, started, state.mode);
+        }
+        const data = await finishStudio(submitted, started);
         const urls = urlsFromResponse(data);
         if (!urls.length) {
             throw new Error("Couldn't make that picture. Try again.");
@@ -486,12 +633,46 @@ els.btnRun.addEventListener('click', async () => {
         showError(err.message || "Couldn't make that picture. Try again.");
         showStage(state.results.length ? 'result' : 'empty');
     } finally {
-        clearInterval(tick);
         setRunning(false);
     }
 });
 
 els.prompt.addEventListener('input', clearError);
+
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && state.running) {
+        requestWakeLock();
+    }
+});
+
+async function resumeSavedJob() {
+    const saved = readSavedJob();
+    if (!saved || !saved.id) {
+        return;
+    }
+    if (saved.mode) {
+        setMode(saved.mode);
+    }
+    setRunning(true);
+    showStage('busy');
+    const startedAt = saved.startedAt || Date.now();
+    startElapsed(startedAt);
+    try {
+        const data = await followJob(saved.id, startedAt);
+        const urls = urlsFromResponse(data);
+        if (!urls.length) {
+            throw new Error("Couldn't make that picture. Try again.");
+        }
+        renderResults(urls);
+        showStage('result');
+    } catch (err) {
+        clearSavedJob();
+        showError(err.message || "Couldn't make that picture. Try again.");
+        showStage('empty');
+    } finally {
+        setRunning(false);
+    }
+}
 
 fetch('/api/ready')
     .then((res) => res.json())
@@ -503,3 +684,4 @@ fetch('/api/ready')
     .catch(() => {});
 
 setMode('generate');
+resumeSavedJob();

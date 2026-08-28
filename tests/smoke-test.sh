@@ -98,6 +98,13 @@ python3 -c "import json; d=json.load(open('/tmp/happy-gen.json')); assert 'pictu
     || fail "/api/generate error was not clear"
 pass "/api/generate rejects an empty prompt"
 
+info "Testing missing job is a clear 404..."
+JOB_CODE=$(curl -s -o /tmp/happy-job.json -w "%{http_code}" "${BASE_URL}/api/jobs/not-a-real-job")
+[ "${JOB_CODE}" = "404" ] || fail "/api/jobs missing id returned ${JOB_CODE}"
+python3 -c "import json; d=json.load(open('/tmp/happy-job.json')); assert 'anymore' in d['error'].lower() or 'try again' in d['error'].lower()" \
+    || fail "/api/jobs error was not clear"
+pass "/api/jobs returns a clear 404"
+
 echo ""
 echo "=============================================="
 echo "  ALL SMOKE TESTS PASSED"

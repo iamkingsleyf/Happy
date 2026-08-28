@@ -89,6 +89,7 @@ On her iPhone:
 - **Edit** — tap the plus or **Pic**, pick a picture, type what to change, tap **Change**
 - **Split** — tap the plus, add a pic, tap **Split** to cut it into pieces
 - **Size** — Best, Square, Tall, or Wide, and how many pictures
+- If the phone locks or a call comes in, come back to the same page — the picture still finishes
 
 Errors are plain English, for example: “Tell me what picture you want.”
 
