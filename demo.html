@@ -55,6 +55,9 @@
     <style>
         textarea, input, select { font-size: 16px !important; }
         textarea { field-sizing: content; }
+        /* Long prompts scroll inside the box so the finished pic stays visible. */
+        #prompt { max-height: 8.5rem; overflow-y: auto; }
+        #composer:not(:focus-within) #prompt { max-height: 4.5rem; }
         .safe-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
     </style>
 </head>
